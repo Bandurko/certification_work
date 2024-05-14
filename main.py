@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
 import requests
 from bs4 import BeautifulSoup
 import time
 import numpy as np
-from pydantic import BaseModel
 from sklearn.linear_model import LinearRegression
 
 
