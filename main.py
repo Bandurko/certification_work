@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import requests
 from bs4 import BeautifulSoup
@@ -37,7 +38,7 @@ async def read_item(distr: str, flat_area: float, flat_rooms: int):
     }
 
     # Задаем количество страниц сайта Циан со ссылками на квартиры (ОСТОРОЖНО! Может ссработать защита от парсинга (Ошибка 429).)
-    for i in range(2, 4):
+    for i in range(2, 5):
 
         url = f'https://vladivostok.cian.ru/cat.php?currency=2&deal_type=sale&engine_version=2&offer_type=flat&p={i}&region=4701&room1=1&room2=1&room3=1&room4=1&room5=1&type=4'
 
@@ -165,4 +166,5 @@ async def read_item(distr: str, flat_area: float, flat_rooms: int):
     predic_price = model.predict(np.array([[house_area, house_rooms]]))
     predicted_price = float(f'{predic_price[0]:.2f}')
 
-    return {"predicted_price": predicted_price}
+    message = {"predicted_price": predicted_price}
+    return JSONResponse(content=message)
