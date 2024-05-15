@@ -1,7 +1,7 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
 from fastapi.responses import HTMLResponse
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
 import requests
 from bs4 import BeautifulSoup
 import time
@@ -38,9 +38,42 @@ async def read_item(distr: str, flat_area: float, flat_rooms: int):
     }
 
     # Задаем количество страниц сайта Циан со ссылками на квартиры (ОСТОРОЖНО! Может ссработать защита от парсинга (Ошибка 429).)
-    for i in range(2, 5):
+    for i in range(2, 4):
 
         url = f'https://vladivostok.cian.ru/cat.php?currency=2&deal_type=sale&engine_version=2&offer_type=flat&p={i}&region=4701&room1=1&room2=1&room3=1&room4=1&room5=1&type=4'
+
+        #     Структура запроса с доступными предложениями
+        #
+        #     https://vladivostok.cian.ru/cat.php?
+        #     currency=2&
+        #     deal_type=sale&
+        #     engine_version=2&
+        #     offer_type=flat&
+        #     p={i}&
+        #     region=4701&
+        #     room1=1&
+        #     room2=1&
+        #     room3=1&
+        #     room4=1&
+        #     room5=1&
+        #     type=4
+        #
+        #
+        # Параметры
+        #
+        # https://vladivostok.cian.ru/cat.php? – URL сайта Циан интересующего города
+        # currency - Валюта(2 - RUB)
+        # deal_type - Тип предложения(sale - продажа)
+        # engine_version - Версия движка(по умолчанию - 2)
+        # offer_type - Тип недвижимости(flat - квартира)
+        # p - Номер страницы(задается в цикле)
+        # region - 4701(предположительно регион города(для Владивостока - 4701))
+        # room1 - Включать в поиск однокомнатные квартиры
+        # room2 - Включать в поиск двухкомнатные квартиры
+        # room3 - Включать в поиск трёхкомнатные квартиры
+        # room4 - Включать в поиск четырёхкомнатные квартиры
+        # room5 - Включать в поиск пятикомнатные квартиры
+        # type - ? (по умолчанию - 4)
 
         q = requests.get(url=url, headers=headers)
         result = q.text
@@ -82,6 +115,8 @@ async def read_item(distr: str, flat_area: float, flat_rooms: int):
             q = requests.get(line, headers=headers)
             result = q.text
 
+            time.sleep(3)  # "Защита" от определения парсинга
+
             soup = BeautifulSoup(result, 'lxml')
 
             print(q.status_code)  # Печатаем ответ сервера на запрос
@@ -94,7 +129,7 @@ async def read_item(distr: str, flat_area: float, flat_rooms: int):
             if find_word in words:
                 index_word = words.index(find_word)
             district = (words[index_word + 1][:-1:])  # Парсим район в котором находится квартира
-            time.sleep(2)  # "Защита" от определения парсинга
+            time.sleep(1)  # "Защита" от определения парсинга
             if district == distr:  # Определяем совпадает-ли район, где находится квартира с заданным районом
 
                 rooms_and_area = soup.find('div', {'data-name': 'OfferTitleNew'})
@@ -164,7 +199,7 @@ async def read_item(distr: str, flat_area: float, flat_rooms: int):
     # Задаем кол-во комнат в квартире (задается в GET HTTP запросе)
     house_rooms = flat_rooms
     predic_price = model.predict(np.array([[house_area, house_rooms]]))
-    predicted_price = float(f'{predic_price[0]:.2f}')
+    predicte_price = float(f'{predic_price[0]:.2f}')
 
-    message = {"predicted_price": predicted_price}
+    message = {"predicted_price": predicte_price}
     return JSONResponse(content=message)
